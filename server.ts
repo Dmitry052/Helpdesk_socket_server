@@ -2,7 +2,7 @@ import express = require("express");
 
 const app: express.Application = express();
 const WebSocket = require("ws");
-const server = new WebSocket.Server({ port: 3000 });
+const server = new WebSocket.Server({ port: 3003 });
 
 app.use(express.json());
 app.use(function(req, res, next) {
@@ -25,6 +25,6 @@ server.on("connection", async (ws: any) => {
 
 app.use(`/auth`, require("./src/routes/auth")({}));
 
-app.listen(80, () => {
-  console.log("Server is started on port: 80");
+app.listen(3000, () => {
+  console.log("Server is started on port: 3000");
 });
