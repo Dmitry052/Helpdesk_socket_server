@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node ./build/server.js",
     "build": "tsc",
-    "dev": "ENVIRONMENT=dev ts-node-dev --respawn --transpileOnly ./server.ts"
+    "dev": "ts-node-dev --respawn --transpileOnly ./server.ts"
   },
   "repository": {
     "type": "git",
@@ -21,7 +21,10 @@
   "homepage": "https://github.com/Dmitry052/Helpdesk_socket_server#readme",
   "dependencies": {
     "@types/express-session": "^1.15.13",
+    "@types/request": "^2.48.2",
+    "@types/ws": "^6.0.1",
     "express": "^4.17.1",
+    "request": "^2.88.0",
     "ws": "^7.0.1"
   },
   "devDependencies": {
