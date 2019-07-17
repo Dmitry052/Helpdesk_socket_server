@@ -24,6 +24,8 @@ app.use(function(req, res, next) {
   next();
 });
 
+app.use(`/auth`, require("./src/routes/auth")(API_SERVER_DB));
+
 app.listen(HOST_PORT, () => {
   console.log(`Server is started on port: ${HOST_PORT}`);
 });
