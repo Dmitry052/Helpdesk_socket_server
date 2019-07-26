@@ -5,7 +5,7 @@ import { WS_SEND_MESSAGE } from "./../types/ws";
 let SERVER_URL = "";
 const headers = { "content-type": "application/json" };
 
-const getMessages = (
+const getMessages = async (
   client: WebSocket,
   userId: string = "",
   adminId: string = ""
@@ -18,12 +18,10 @@ const getMessages = (
     },
     (err, httpResponse, body) => {
       if (err) {
-        console.log("ERROR", err);
+        console.log("* WS -> ERROR", err);
       }
-
       const { messages = [], status = "" } = JSON.parse(body);
-      console.log(`Get messages for ${userId} status: ${status}`);
-
+      console.log(`* WS -> Get messages for ${userId} status: ${status}`);
       client.send(JSON.stringify({ status, messages, type: "get" }));
     }
   );
@@ -38,12 +36,46 @@ const sendMessage = (client: WebSocket, data: WS_SEND_MESSAGE) => {
     },
     (err, httpResponse, body) => {
       if (err) {
-        console.log("ERROR", err);
+        console.log("* WS sendMessage -> ERROR", err);
       }
 
       const { messages = [], status = "" } = JSON.parse(body);
-      console.log(`Send message  for ${data.userId}  status: ${status}`);
+      console.log(
+        `* WS -> Send message  for ${data.userId}  status: ${status}`
+      );
       client.send(JSON.stringify({ status, messages, type: "send" }));
+    }
+  );
+};
+
+const checkUpdateMessages = (
+  client: WebSocket,
+  userId: string,
+  adminId: string
+) => {
+  request.post(
+    {
+      headers,
+      url: `${SERVER_URL}/chat/checkMessagesUpdate`
+    },
+    async (err, httpResponse, body) => {
+      if (err) {
+        console.log("* WS checkUpdateMessages -> ERROR", err);
+        client.send(JSON.stringify({ status: "ERROR", err }));
+      } else {
+        const { status = "" } = JSON.parse(body);
+
+        if (status) {
+          try {
+            await getMessages(client, userId, adminId);
+          } catch (err) {
+            console.log("* checkUpdateMessages", err);
+          }
+        }
+        setTimeout(() => {
+          checkUpdateMessages(client, userId, adminId);
+        }, 3000);
+      }
     }
   );
 };
@@ -57,7 +89,7 @@ export const initialSocket = (socket: WebSocket.Server) => {
     ws.on("message", (message: string) => {
       socket.clients.forEach(client => {
         const { type, userId, adminId, data } = JSON.parse(message);
-
+        checkUpdateMessages(client, userId, adminId);
         if (userId && adminId) {
           if (type === "initial" && userId && adminId) {
             getMessages(client, userId, adminId);

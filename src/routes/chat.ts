@@ -4,7 +4,7 @@ import * as request from "request-promise";
 let _SERVER_URL: string;
 const router = express.Router();
 
-router.post("/", async function(req, res) {
+router.post("/getusers", async function(req, res) {
   const { adminId } = req.body;
 
   if (adminId) {
@@ -12,21 +12,21 @@ router.post("/", async function(req, res) {
       const optinons = {
         method: "POST",
         headers: { "content-type": "application/json" },
-        uri: `${_SERVER_URL}/auth/check`,
+        uri: `${_SERVER_URL}/chat/getusers`,
         body: {
-          adminId
+          userId: adminId
         },
         json: true
       };
       const result = await request(optinons);
-      console.log(`* Check user ${adminId} status: ${result.status}`);
+      console.log(`* Get chat users for ${adminId} status: ${result.status}`);
       return res.send(result);
     } catch (err) {
-      console.log(`* Check user ${adminId} status: ${err}`);
+      console.log(`* Get chat users for ${adminId} status: ${err}`);
       return res.send({ status: "ERROR", message: err.message });
     }
   }
-  console.log(`* Check user ${adminId} status: Invalid admin id`);
+  console.log(`* Get chat users for ${adminId} status: Invalid admin id`);
   return res.send({ status: "ERROR", message: "Invalid admin id" });
 });
 

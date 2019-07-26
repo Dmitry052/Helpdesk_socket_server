@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node ./build/server.js",
-    "build": "tsc",
-    "dev": "ts-node-dev --respawn --transpileOnly ./server.ts"
+    "build": "tsc && ENV=prod npm run build:config",
+    "build:config": "tsc && node ./build/src/buildConfig.js",
+    "dev": "npm run build:config && ts-node-dev --respawn --transpileOnly ./server.ts"
   },
   "repository": {
     "type": "git",

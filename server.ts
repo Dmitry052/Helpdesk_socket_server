@@ -25,6 +25,7 @@ app.use(function(req, res, next) {
 });
 
 app.use(`/auth`, require("./src/routes/auth")(API_SERVER_DB));
+app.use(`/chat`, require("./src/routes/chat")(API_SERVER_DB));
 
 app.listen(HOST_PORT, () => {
   console.log(`Server is started on port: ${HOST_PORT}`);
