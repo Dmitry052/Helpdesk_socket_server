@@ -1,5 +1,5 @@
 import WebSocket = require("ws");
-import * as request from "request";
+import * as request from "request-promise";
 import { WS_SEND_MESSAGE } from "./../types/ws";
 
 let SERVER_URL = "";
@@ -10,74 +10,73 @@ const getMessages = async (
   userId: string = "",
   adminId: string = ""
 ) => {
-  request.post(
-    {
+  try {
+    const optinons = {
+      method: "POST",
       headers,
       url: `${SERVER_URL}/chat/getUserMessages`,
-      body: JSON.stringify({ adminId, userId })
-    },
-    (err, httpResponse, body) => {
-      if (err) {
-        console.log("* WS -> ERROR", err);
-      }
-      const { messages = [], status = "" } = JSON.parse(body);
-      console.log(`* WS -> Get messages for ${userId} status: ${status}`);
-      client.send(JSON.stringify({ status, messages, type: "get" }));
-    }
-  );
+      body: {
+        adminId,
+        userId
+      },
+      json: true
+    };
+    const result = await request(optinons);
+    const { messages = [], status = "" } = result;
+    client.send(JSON.stringify({ status, messages, type: "get" }));
+
+    console.log(`* WS -> Get messages for ${userId} status: ${status}`);
+  } catch (err) {
+    console.log("* WS -> ERROR", err);
+  }
 };
 
-const sendMessage = (client: WebSocket, data: WS_SEND_MESSAGE) => {
-  request.post(
-    {
+const sendMessage = async (client: WebSocket, data: WS_SEND_MESSAGE) => {
+  try {
+    const optinons = {
+      method: "POST",
       headers,
       url: `${SERVER_URL}/chat/sendMessage`,
-      body: JSON.stringify(data)
-    },
-    (err, httpResponse, body) => {
-      if (err) {
-        console.log("* WS sendMessage -> ERROR", err);
-      }
+      body: {
+        ...data
+      },
+      json: true
+    };
+    const result = await request(optinons);
+    const { messages = [], status = "" } = result;
+    client.send(JSON.stringify({ status, messages, type: "send" }));
 
-      const { messages = [], status = "" } = JSON.parse(body);
-      console.log(
-        `* WS -> Send message  for ${data.userId}  status: ${status}`
-      );
-      client.send(JSON.stringify({ status, messages, type: "send" }));
-    }
-  );
+    console.log(`* WS -> Send message  for ${data.userId}  status: ${status}`);
+  } catch (err) {
+    console.log("* WS sendMessage -> ERROR", err);
+  }
 };
 
-const checkUpdateMessages = (
+const checkUpdateMessages = async (
   client: WebSocket,
   userId: string,
   adminId: string
 ) => {
-  request.post(
-    {
+  try {
+    const optinons = {
+      method: "POST",
       headers,
       url: `${SERVER_URL}/chat/checkMessagesUpdate`
-    },
-    async (err, httpResponse, body) => {
-      if (err) {
-        console.log("* WS checkUpdateMessages -> ERROR", err);
-        client.send(JSON.stringify({ status: "ERROR", err }));
-      } else {
-        const { status = "" } = JSON.parse(body);
+    };
+    const result = await request(optinons);
+    const { status } = JSON.parse(result);
 
-        if (status) {
-          try {
-            await getMessages(client, userId, adminId);
-          } catch (err) {
-            console.log("* checkUpdateMessages", err);
-          }
-        }
-        setTimeout(() => {
-          checkUpdateMessages(client, userId, adminId);
-        }, 3000);
-      }
+    if (status) {
+      await getMessages(client, userId, adminId);
     }
-  );
+
+    setTimeout(() => {
+      checkUpdateMessages(client, userId, adminId);
+    }, 3000);
+  } catch (err) {
+    console.log("* WS checkUpdateMessages -> ERROR", err);
+    client.send(JSON.stringify({ status: "ERROR", err }));
+  }
 };
 
 export const setServerURL = (url: string) => {
